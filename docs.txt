@@ -1,0 +1,229 @@
+Extrasklep's Language documentation
+Sorry if this sucks
+
+Basic syntax:
+[input][sign][output];
+
+Input can be a signed number, escaped letter, variable or "i" for stdin.
+Output can be a variable or "o","r" for stdout.
+
+Comments can be made with / and anything after ; in a line will be ignored.
+
+Escapes:
+Use \ to escape the character after it and turn it into a number.
+\d would equal to 100.
+This does not work with newlines and maybe some other special characters, use the character n to get a newline.
+Example:
+\d>>c0;
+n>>c1;
+c0>>r;
+c1>>r;
+c0>>r;
+Output:
+<d
+d>End of output.
+
+--VARIABLES--
+
+To write or read a variable use "v[variable number]".
+Variables are signed long integers in C/C++.
+Example:
+1234>>v0;
+v0>>o;
+Output:
+> 1234
+
+Char variables
+To write or read a char variable use "c[variable number]".
+Char variables should be used to store characters and smaller numbers.
+Signature depends on your system, default char in C/C++.
+Example:
+\A>>c0;
+c0>>r;
+Output:
+A
+
+There is a limit for each type of variables depending on your compiler/interpreter.
+You can also put another variable as [variable number] to read the variable with the number of the first variable.
+Converting char variables to normal variables and the other way should work fine (except overflows when converting a long integer to 8 bit integer).
+
+--I/O--
+
+i (input) -- Read a number from standard input.
+This will always show "< " to notify the user that the program is asking for input.
+Example:
+i>>v0;
+v0>>o;
+Input:
+< 123
+Output:
+> 123
+
+o (output) -- Write a number to standard output.
+This will always show "> " before the number and a newline after the number.
+Example:
+1234>>v0;
+123>>c0;
+v0>>o;
+c0>>o;
+Output:
+1234
+123
+
+r (output) -- Raw output: write a byte to standard output.
+Example:
+\A>>c0;
+100>>c1;
+c0>>r;
+c1>>r;
+
+
+--SIGNS--
+
+>> - Move/write
+Writes input to output.
+Example:
+1234>>o;
+Output:
+> 1234
+
+>? - If jump [input]>?[input];
+Jumps to output line number if input is bigger than 0 (only bigger than 0, not negative numbers).
+Example 1:
+(1) i>>v0; //get input into variable
+(2) v0>?4; //jump to 4 if v0 is bigger than 0
+(3) 1>?6;  //jump to else 
+(4) 1>>o;  //write 1 to output (if v0 is bigger than 0)
+(5) 1>?7;  //jump to after else (end of code)
+(6) 0>>o;  //write 0 to output (else)
+Output 1:
+< 5
+> 1
+Output 2:
+< -5
+> 0
+Example 2: Simple loop
+(1) 5>>v0; //starting number
+(2) v0>?4; //jump to 4 if the number is bigger than 0
+(3) 1>?7;  //else jump to end of code
+(4) v0>>o; //write number to output
+(5) 1>-v0; //decrement the number
+(6) 1>?2;  //jump back to the beginning of the loop
+Output:
+> 5
+> 4
+> 3
+> 2
+> 1
+Example 3: l (line) input type
+Using l returns the number of the current line so you can jump to it later or output it for debugging.
+(1) 2>>v0;
+(2) l>>v1;
+(3) v1>>o;
+(4) 1>-v0;
+(5) v0>?v1;
+Output:
+> 2
+> 2
+
+>+ - Add
+Adds input to output.
+Example:
+2>+v0;
+3>+v0;
+v0>>o;
+Output:
+> 5
+
+>- - Subtract
+Subtracts input from the output.
+Example:
+5>>v0;
+2>-v0;
+v0>>o;
+Output:
+> 3
+
+>* - Multiply
+Multiplies output by the input.
+Example:
+5>>v0;
+3>*v0;
+v0>>o;
+Output:
+> 15
+
+>/ - Divide
+Divides output by the input.
+Example:
+15>>v0;
+3>/v0;
+v0>>o;
+Output:
+> 5
+
+--LETTERS--
+\ - Letter escape. Returns the number of the letter after it.
+This will not work with new lines and maybe some other characters that aren't normal.
+Example:
+\d>>v0;
+v0>>o;
+v0>>r;
+Output:
+> 100
+d
+
+o - Output for numbers. This will output a number even from char variables and will always put "> " before the number and a new line after.
+Example:
+5>>v0;
+\ >>c0;
+1>>o;
+v0>>o;
+c0>>o;
+Output:
+> 1
+> 5
+> 32
+
+i - Input for numbers. This will return a number from standard input and will always output "< " before listening to input to notify the user that the program is asking for input.
+Example:
+i>>v0;
+v0>>o;
+Output:
+< 5
+> 5
+
+r - Raw output for characters. This will output the input as a char and not put anything before or after it.
+Example:
+0>>c0;
+\d>>v0;
+\d>>c1;
+100>>c2;
+c0>>r;
+v0>>r;
+c1>>r;
+c2>>r;
+Output:
+ddd
+
+l - Current line number. Returns the number of the current line to use for jumping to it later or debugging.
+Example:
+(1)
+(2) //Comment
+(3) l>>v0;
+(4) 
+(5) v0>>o;
+Output:
+> 3
+
+n - New line character. Returns the number of the newline character.
+Example:
+\d>>c0;
+n>>c1;
+c0>>r;
+c1>>r;
+n>>r;
+Output:
+<d
+
+>
