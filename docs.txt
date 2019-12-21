@@ -45,6 +45,21 @@ A
 
 There is a limit for each type of variables depending on your compiler/interpreter.
 You can also put another variable as [variable number] to read the variable with the number of the first variable.
+Example:
+4>>c1;
+7>>c2;
+13>>c3;
+3>>v1;
+v1>?7;
+1>?10;
+cv1>>o; //outputs the value of char variable with the number stored in v1
+1>-v1;
+1>?5;
+Output:
+> 13
+> 7
+> 4
+
 Converting char variables to normal variables and the other way should work fine (except overflows when converting a long integer to 8 bit integer).
 
 --I/O--
