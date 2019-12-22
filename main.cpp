@@ -36,7 +36,7 @@ long getNumberFrom(char* em) {
     unsigned int len=strlen(em);
     if(len<1) {std::cout << '\n' << gLine << ": invalid read\n"; exit(255);}
     else {
-        if(isAStringNumber(em[0])) {
+        if(isAStringNumber(em[0]) || em[0]=='-') {
             currentNumber=atoi(em);
             return currentNumber;
         } else if(em[0]=='o'||em[0]=='r') {
