@@ -173,7 +173,7 @@ bool isOutputType(unsigned char type) {
 
 int main(int argc,char* args[]) {
     if(argc<2) {
-        std::cout << "usage: " << args[0] << " [script] [debug level]\n";
+        std::cout << "version 1.0\nusage: " << args[0] << " [script] [debug level]\n";
         return 0;
     }
     if(argc>2) {

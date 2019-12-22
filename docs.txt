@@ -1,4 +1,4 @@
-Extrasklep's Language documentation
+Extrasklep's Language version 1.0 documentation 
 Sorry if this sucks
 
 Basic syntax:
