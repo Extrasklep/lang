@@ -14,7 +14,7 @@ unsigned long gLine=0; //for l and handling errors
 
 //here variable limit
 long variables[256];
-char cvariables[32768];
+unsigned char cvariables[32768];
 
 void catchFault(int sig) {
     std::cout << "\nsegmentation fault at line " << gLine << "\n\0";

@@ -36,7 +36,7 @@ Output:
 Char variables
 To write or read a char variable use "c[variable number]".
 Char variables should be used to store characters and smaller numbers.
-Signature depends on your system, default char in C/C++.
+Always unsigned [0-255], unsigned char in C/C++.
 Example:
 \A>>c0;
 c0>>r;
