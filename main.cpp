@@ -482,7 +482,7 @@ unsigned long parseLine(char* line) {
     for(unsigned char i=0;i<6;i++) {elementStrings[i] = new char[32];}
     unsigned char currentElement=0;
     //return if the line is a comment/whitespace/...
-    if(splitLine(line,elementTypes,elementStrings,currentElement)) return 0;
+    if(splitLine(line,elementTypes,elementStrings,currentElement)) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
     if(peErr()) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
     
     unsigned long res = executeLine(elementTypes,elementStrings,currentElement);
@@ -518,54 +518,56 @@ int main(int argc,char* args[]) {
         debug=atoi(args[2]);
     }
     
-    std::ifstream file(args[1]);
+    char** lines;
+    
+    //read lines into memory
+    std::ifstream file(args[1],std::ios::in|std::ios::ate);
     if(file.is_open()) {
-        std::string sline;
-        //current line string
-        char* line;
-        //current line number
-        unsigned long currentLine=0;
-        //jump destination
-        unsigned long jumpTo=1;
-        //true if currently jumping
-        //this method of jumping really sucks and i need to do it in a better way
-        bool jumpRequested=0;
-        while (std::getline(file,sline) && ++currentLine) {
-            //jumps suck
-            if(jumpRequested) {
-                //arrived at jump destination
-                if(currentLine==jumpTo) {
-                    if(debug>=200) {std::cout << currentLine << ": jump done\n";}
-                    jumpRequested=0;
-                }
-                //current line is higher than the jump destination
-                else if(jumpTo<currentLine) {
-                    if(debug>=200) {std::cout << "jump: seeking back: " << "cline=" << currentLine << " jt=" << jumpTo << " jr=" << jumpRequested << "\n";}
-                    currentLine=1;
-                    file.seekg(std::ios::beg);
-                }
-                //keep going forward
-                else {
-                    continue;
-                }
+        std::streampos fsize = file.tellg();
+        file.seekg(std::ios::beg);
+        char* memblock = new char[fsize];
+        file.read(memblock,fsize);
+        file.close();
+        
+        //count total lines
+        unsigned long totalLines = 1;
+        for(unsigned long i=0;i<fsize;i++) {
+            if(memblock[i] == '\n') totalLines++;
+        }
+        if(debug) {std::cout << "total lines: " << totalLines << '\n';}
+        
+        //split lines
+        lines = new char* [totalLines];
+        unsigned long filePos = 0;
+        unsigned long previousFilePos = 0;
+        //count current line length
+        unsigned long cLineLen = 0;
+        for(unsigned long l=1;l<totalLines;l++) {
+            cLineLen = 0;
+            previousFilePos = filePos;
+            while(memblock[filePos++] != '\n') {cLineLen++;}
+            lines[l] = new char[cLineLen+1];
+            for(unsigned long i=previousFilePos;i<filePos;i++) {
+                lines[l][i-previousFilePos] = memblock[i];
             }
-            //convert line to cstring
-            line = new char[sline.length()+1];
-            strcpy(line,sline.c_str());
+            lines[l][cLineLen] = '\0';
+        }
+        
+        unsigned long currentLine=0;
+        while (++currentLine < totalLines) {
             gLine=currentLine;
             
             //parse and execute
-            if(jumpTo = parseLine(line)) {
-                jumpRequested=1;
-                currentLine=0;
-                file.seekg(std::ios::beg);
+            unsigned long jumpTo;
+            if(jumpTo = parseLine(lines[currentLine])) {
+                //-1 because the loop is going to add to it
+                currentLine=jumpTo-1;
             }
             if(peErr()) {exit(peErr());}
         }
-    file.close();
-    if(debug) {std::cout << '\n';}
+        if(debug) {std::cout << '\n';}
     } else {
-        std::cout << "unable to open file " << args[2] << '\n';
+        perror("unable to open file");
         return 0;
     }
 }
