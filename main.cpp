@@ -506,13 +506,12 @@ int main(int argc,char* args[]) {
             std::cout << "$ ";
             std::cin >> line;
             if(parseLine(line)) {
-                std::cout << "\ncannot jump in interactive shell";
+                std::cout << "cannot jump in interactive shell\n";
             }
             if(peErr()) {
                 peErr(0);
             }
             delete[] line;
-            std::cout << '\n';
         }
     }
     if(argc>2) {
