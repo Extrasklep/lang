@@ -13,6 +13,17 @@ unsigned char debug=0;
 
 unsigned long gLine=0; //global line number variable, for 'l' letter in the language and handling errors
 
+unsigned char parseExecErr = 0; //allow handling errors instead of always exiting
+
+unsigned char peErr(unsigned char code) {
+    parseExecErr = code;
+    return parseExecErr;
+}
+
+unsigned char peErr() {
+    return parseExecErr;
+}
+
 //here variable limit
 long variables[256];
 unsigned char cvariables[32768];
@@ -40,7 +51,7 @@ long getNumberFrom(char* em) {
     //result number
     long currentNumber=0;
     unsigned int len=strlen(em);
-    if(len<1) {std::cout << '\n' << gLine << ": invalid read\n"; exit(255);}
+    if(len<1) {std::cout << '\n' << gLine << ": invalid read\n"; peErr(255); return 0;}
     else {
         //number
         if(isAStringNumber(em[0]) || em[0]=='-') {
@@ -50,7 +61,7 @@ long getNumberFrom(char* em) {
         //output (illegal)
         else if(em[0]=='o'||em[0]=='r') {
             std::cout << '\n' << gLine << ": illegal operation: cannot read from output\n";
-            exit(255);
+            peErr(255); return 0;
         }
         //number input
         else if(em[0]=='i') {
@@ -79,12 +90,13 @@ long getNumberFrom(char* em) {
             if(vnumS[0]=='v'||vnumS[0]=='c') {
                 //get number from variable number string (read the pointer variable)
                 vnum=getNumberFrom(vnumS);
+                if(peErr()) return 0;
             } else {
                 //convert the string number after 'v' into a number normally
                 vnum=atoi(vnumS);
             }
             //don't try to read out of bounds
-            if(vnum>=sizeof(variables)) {std::cout << '\n' << gLine << ": memory read error: variable is outside of variable limit\n"; exit(255);}
+            if(vnum>=sizeof(variables)) {std::cout << '\n' << gLine << ": memory read error: variable is outside of variable limit\n"; peErr(255); return 0;}
             //read the number stored in the variable
             currentNumber=variables[vnum];
             return currentNumber;
@@ -101,12 +113,13 @@ long getNumberFrom(char* em) {
             if(vnumS[0]=='v'||vnumS[0]=='c') {
                 //get number from variable number string (read the pointer variable)
                 vnum=getNumberFrom(vnumS);
+                if(peErr()) return 0;
             } else {
                 //convert the string number after 'c' into a number normally
                 vnum=atoi(vnumS);
             }
             //don't try to read out of bounds
-            if(vnum>=sizeof(cvariables)) {std::cout << '\n' << gLine << ": memory read error: variable is outside of variable limit\n"; exit(255);}
+            if(vnum>=sizeof(cvariables)) {std::cout << '\n' << gLine << ": memory read error: variable is outside of variable limit\n"; peErr(255); return 0;}
             //read the number stored in the variable
             currentNumber=cvariables[vnum];
             return currentNumber;
@@ -123,7 +136,7 @@ long getNumberFrom(char* em) {
 
 void putNumberTo(char* em, long num) {
     unsigned int len=strlen(em);
-    if(len<1) {std::cout << '\n' << gLine << ": invalid write\n"; exit(255);}
+    if(len<1) {std::cout << '\n' << gLine << ": invalid write\n"; peErr(255); return;}
     else {
         //can't write to a number, the interpreter should never attempt to do this though
         if(isAStringNumber(em[0])) {return;}
@@ -142,7 +155,7 @@ void putNumberTo(char* em, long num) {
         //input (illegal)
         else if(em[0]=='i') {
             std::cout << '\n' << gLine << ": illegal operation: cannot write to input\n";
-            exit(255);
+            peErr(255); return;
         }
         //write to long variable
         else if(len>1 && em[0]=='v') {
@@ -156,12 +169,13 @@ void putNumberTo(char* em, long num) {
             if(vnumS[0]=='v'||vnumS[0]=='c') {
                 //get number from variable number string (read the pointer variable)
                 vnum=getNumberFrom(vnumS);
+                if(peErr()) return;
             } else {
                 //convert the string number after 'v' into a number normally
                 vnum=atoi(vnumS);
             }
             //don't try to write out of bounds
-            if(vnum>=sizeof(variables)) {std::cout << '\n' << gLine << ": memory write error: variable is outside of variable limit\n"; exit(255);}
+            if(vnum>=sizeof(variables)) {std::cout << '\n' << gLine << ": memory write error: variable is outside of variable limit\n"; peErr(255); return;}
             //write the input number to the variable
             variables[vnum]=num;
             return;
@@ -178,12 +192,13 @@ void putNumberTo(char* em, long num) {
             if(vnumS[0]=='v'||vnumS[0]=='c') {
                 //get number from variable number string (read the pointer variable)
                 vnum=getNumberFrom(vnumS);
+                if(peErr()) return;
             } else {
                 //convert the string number after 'c' into a number normally
                 vnum=atoi(vnumS);
             }
             //don't try to write out of bounds
-            if(vnum>=sizeof(cvariables)) {std::cout << '\n' << gLine << ": memory write error: variable is outside of variable limit\n"; exit(255);}
+            if(vnum>=sizeof(cvariables)) {std::cout << '\n' << gLine << ": memory write error: variable is outside of variable limit\n"; peErr(255); return;}
             //write the input number to the variable
             cvariables[vnum]=num;
             return;
@@ -293,7 +308,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
     bool keepReading=1;
     //this part is also a mess i guess
     for(;linecpos<linelen && keepReading;linecpos++) {
-        if(currentElement>sizeof(elementTypes)) {std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: too many elements\n"; exit(255);}
+        if(currentElement>sizeof(elementTypes)) {std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: too many elements\n"; peErr(255); return 0;}
         //starting new element, find out the type of it
         if(newElement) {
             if(debug>=255) {std::cout << currentLine << ":" << linecpos+1 << " trying to start new element\n";}
@@ -317,7 +332,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
                     for(unsigned long p=linecpos;p<linelen && isType(line[p],i,0);p++) {elementStringSize++;}
                     if(elementStringSize>32) {
                         std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: element too long\n";
-                        exit(255);
+                        peErr(255); return 0;
                     }
                     elementStrings[currentElement][currentElementStrPos++] = line[linecpos];
                     if(i==4) {
@@ -331,7 +346,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
             }
             if(!found) {
                 std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: no valid element found\n";
-                exit(255);
+                peErr(255); return 0;
             }
         }
         //read more of current element
@@ -368,52 +383,68 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
 unsigned long executeLine(unsigned char* elementTypes,char** elementStrings,unsigned char& currentElement) {
     unsigned long currentLine = gLine;
     //no terminator
-    if(elementStrings[currentElement-1][0]!=';') {std::cout << '\n' << "syntax error: expected ; on line " << currentLine << '\n'; exit(255);}
+    if(elementStrings[currentElement-1][0]!=';') {std::cout << '\n' << "syntax error: expected ; on line " << currentLine << '\n'; peErr(255); return 0;}
     //not enough elements
-    if(currentElement-1<3) {std::cout << "\nsyntax error: incomplete operation at line " << currentLine << '\n'; exit(255);}
+    if(currentElement-1<3) {std::cout << "\nsyntax error: incomplete operation at line " << currentLine << '\n'; peErr(255); return 0;}
     
     // >> write input to output
     if(isInputType(elementTypes[0]) && getSignType(elementStrings[1])==1 && isOutputType(elementTypes[2])) {
         long op1=getNumberFrom(elementStrings[0]);
+        if(peErr()) return 0;
         putNumberTo(elementStrings[2],op1);
+        if(peErr()) return 0;
         if(debug>=200) {std::cout << currentLine << ": action: write " << op1 << " to " << elementStrings[2] << '\n';}
     }
     // >+ add input to output
     else if(isInputType(elementTypes[0]) && getSignType(elementStrings[1])==2 && isOutputType(elementTypes[2])) {
         long op1=getNumberFrom(elementStrings[0]);
+        if(peErr()) return 0;
         long op2=getNumberFrom(elementStrings[2]);
+        if(peErr()) return 0;
         putNumberTo(elementStrings[2],op2+op1);
+        if(peErr()) return 0;
         if(debug>=200) {std::cout << currentLine << ": action: add " << op1 << " to " << op2 << " at " << elementStrings[2] << '\n';}
     }
     // >- subtract input from output
     else if(isInputType(elementTypes[0]) && getSignType(elementStrings[1])==3 && isOutputType(elementTypes[2])) {
         long op1=getNumberFrom(elementStrings[0]);
+        if(peErr()) return 0;
         long op2=getNumberFrom(elementStrings[2]);
+        if(peErr()) return 0;
         putNumberTo(elementStrings[2],op2-op1);
+        if(peErr()) return 0;
         if(debug>=200) {std::cout << currentLine << ": action: subtract " << op1 << " from " << op2 << " at " << elementStrings[2] << '\n';}
     }
     // >* multiply output by input
     else if(isInputType(elementTypes[0]) && getSignType(elementStrings[1])==4 && isOutputType(elementTypes[2])) {
         long op1=getNumberFrom(elementStrings[0]);
+        if(peErr()) return 0;
         long op2=getNumberFrom(elementStrings[2]);
+        if(peErr()) return 0;
         putNumberTo(elementStrings[2],op2*op1);
+        if(peErr()) return 0;
         if(debug>=200) {std::cout << currentLine << ": action: multiply " << op2 << " by " << op1 << " at " << elementStrings[2] << '\n';}
     }
     // >/ divide output by input
     else if(isInputType(elementTypes[0]) && getSignType(elementStrings[1])==5 && isOutputType(elementTypes[2])) {
         long op1=getNumberFrom(elementStrings[0]);
+        if(peErr()) return 0;
         long op2=getNumberFrom(elementStrings[2]);
+        if(peErr()) return 0;
         putNumberTo(elementStrings[2],op2/op1);
+        if(peErr()) return 0;
         if(debug>=200) {std::cout << currentLine << ": action: divide " << op2 << " by " << op1 << " at " << elementStrings[2] << '\n';}
     }
     // >? jump to output(actually an input) if input is bigger than 0
     else if(isInputType(elementTypes[0]) && getSignType(elementStrings[1])==6 && isInputType(elementTypes[2])) {
         long op1=getNumberFrom(elementStrings[0]);
+        if(peErr()) return 0;
         if(op1>0) {
             long op2=getNumberFrom(elementStrings[2]);
+            if(peErr()) return 0;
             if(op2<1) {
                 std::cout << '\n' << currentLine << ": illegal jump\n";
-                exit(255);
+                peErr(255); return 0;
             }
             if(debug>=200) {std::cout << gLine << ": action: jump to " << op2 << ": " << op1 << " is bigger than 0 at " << elementStrings[0] << '\n';}
             return op2;
@@ -424,7 +455,7 @@ unsigned long executeLine(unsigned char* elementTypes,char** elementStrings,unsi
     //not a valid operation
     else {
         std::cout << '\n' << currentLine << ": error: invalid operation\n";
-        exit(255);
+        peErr(255); return 0;
     }
     return 0;
 }
@@ -452,8 +483,10 @@ unsigned long parseLine(char* line) {
     unsigned char currentElement=0;
     //return if the line is a comment/whitespace/...
     if(splitLine(line,elementTypes,elementStrings,currentElement)) return 0;
+    if(peErr()) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
     
     unsigned long res = executeLine(elementTypes,elementStrings,currentElement);
+    if(peErr()) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
     //free strings
     for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];}
     return res;
@@ -474,6 +507,9 @@ int main(int argc,char* args[]) {
             std::cin >> line;
             if(parseLine(line)) {
                 std::cout << "\ncannot jump in interactive shell";
+            }
+            if(peErr()) {
+                peErr(0);
             }
             delete[] line;
             std::cout << '\n';
@@ -525,6 +561,7 @@ int main(int argc,char* args[]) {
                 currentLine=0;
                 file.seekg(std::ios::beg);
             }
+            if(peErr()) {exit(peErr());}
         }
     file.close();
     if(debug) {std::cout << '\n';}
