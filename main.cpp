@@ -552,6 +552,7 @@ int main(int argc,char* args[]) {
             }
             lines[l][cLineLen] = '\0';
         }
+        delete[] memblock;
         
         unsigned long currentLine=0;
         while (++currentLine < totalLines) {
