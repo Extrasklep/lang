@@ -344,6 +344,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
             elementStrings[currentElement][currentElementStrPos++] = line[linecpos];
         }
     }
+    elementStrings[currentElement-1][++currentElementStrPos] = '\0';
     
     //print split elements
     if(debug) {
