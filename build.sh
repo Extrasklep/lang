@@ -1,1 +1,1 @@
-g++ -O3 main.cpp -o lang
+g++ -O2 main.cpp -o lang
