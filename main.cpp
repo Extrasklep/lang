@@ -244,7 +244,7 @@ bool isOutputType(unsigned char type) {
 
 int main(int argc,char* args[]) {
     if(argc<2) {
-        std::cout << "version 1.0\nusage: " << args[0] << " [script] [debug level]\n";
+        std::cout << "Extrasklep's language interpreter version 1.0\nusage: " << args[0] << " [script] [debug level]\n";
         return 0;
     }
     if(argc>2) {
@@ -328,7 +328,7 @@ int main(int argc,char* args[]) {
              */
             unsigned char types=11; //amount of different types
             unsigned char elementTypes[6]={0,0,0,0,0,0};
-            char* elementStrings[6];
+            char elementStrings[6][32];
             unsigned char currentElement=0;
             unsigned long currentElementStrPos=0;
             bool newElement=1;
@@ -357,7 +357,10 @@ int main(int argc,char* args[]) {
                             elementTypes[currentElement]=i;
                             unsigned long elementStringSize=1;
                             for(unsigned long p=linecpos;p<linelen && isType(line[p],i,0);p++) {elementStringSize++;}
-                            elementStrings[currentElement] = new char[elementStringSize];
+                            if(elementStringSize>32) {
+                                std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: element too long\n";
+                                exit(255);
+                            }
                             elementStrings[currentElement][currentElementStrPos++] = line[linecpos];
                             if(i==4) {
                                 if(debug>=255) {std::cout << currentLine << ":" << linecpos+1 << " terminator\n";}
