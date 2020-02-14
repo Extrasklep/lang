@@ -322,11 +322,16 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
                     elementStrings[currentElement][currentElementStrPos++] = line[linecpos];
                     if(i==4) {
                         if(debug>=255) {std::cout << currentLine << ":" << linecpos+1 << " terminator\n";}
+                        elementStrings[currentElement][currentElementStrPos++] = '\0';
                         currentElement++; currentElementStrPos=0;
                         keepReading=0;
                     }
                     break;
                 }
+            }
+            if(!found) {
+                std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: no valid element found\n";
+                exit(255);
             }
         }
         //read more of current element
@@ -344,7 +349,6 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
             elementStrings[currentElement][currentElementStrPos++] = line[linecpos];
         }
     }
-    elementStrings[currentElement-1][++currentElementStrPos] = '\0';
     
     //print split elements
     if(debug) {
@@ -456,15 +460,28 @@ unsigned long parseLine(char* line) {
 }
 
 int main(int argc,char* args[]) {
+    //segfault handling
+    signal(SIGSEGV,catchFault);
+    
     if(argc<2) {
         std::cout << "Extrasklep's language interpreter version 1.0\nusage: " << args[0] << " [script] [debug level]\n";
-        return 0;
+        //begin interactive shell
+        std::cout << "interactive shell\n";
+        char* line;
+        while(1) {
+            line = new char[256];
+            std::cout << "$ ";
+            std::cin >> line;
+            if(parseLine(line)) {
+                std::cout << "\ncannot jump in interactive shell";
+            }
+            delete[] line;
+            std::cout << '\n';
+        }
     }
     if(argc>2) {
         debug=atoi(args[2]);
     }
-    //segfault handling
-    signal(SIGSEGV,catchFault);
     
     std::ifstream file(args[1]);
     if(file.is_open()) {
