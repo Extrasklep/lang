@@ -257,8 +257,7 @@ bool isOutputType(unsigned char type) {
     return false;
 }
 
-//returns 0 or 1 if the line is a comment/whitespace/...
-unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStrings,unsigned char& currentElement) {
+void splitLine(char* line,unsigned char* elementTypes,char** elementStrings,unsigned char& currentElement,bool& isEmpty) {
     unsigned long currentLine = gLine;
     //character position in current line
     unsigned long linecpos=0;
@@ -276,13 +275,15 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
     //end of line reached
     if(linecpos>=linelen) {
         //continue;
-        return 1;
+        isEmpty = 1;
+        return;
     }
     //check if line is a comment
     if(line[linecpos]=='/' || line[linecpos]=='#') {
         if(debug) {std::cout << "   (commented line)";}
         //continue;
-        return 1;
+        isEmpty = 1;
+        return;
     }
     //split elements
     /* element types
@@ -308,7 +309,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
     bool keepReading=1;
     //this part is also a mess i guess
     for(;linecpos<linelen && keepReading;linecpos++) {
-        if(currentElement>sizeof(elementTypes)) {std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: too many elements\n"; peErr(255); return 0;}
+        if(currentElement>sizeof(elementTypes)) {std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: too many elements\n"; peErr(255); return;}
         //starting new element, find out the type of it
         if(newElement) {
             if(debug>=255) {std::cout << currentLine << ":" << linecpos+1 << " trying to start new element\n";}
@@ -332,7 +333,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
                     for(unsigned long p=linecpos;p<linelen && isType(line[p],i,0);p++) {elementStringSize++;}
                     if(elementStringSize>32) {
                         std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: element too long\n";
-                        peErr(255); return 0;
+                        peErr(255); return;
                     }
                     elementStrings[currentElement][currentElementStrPos++] = line[linecpos];
                     if(i==4) {
@@ -346,7 +347,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
             }
             if(!found) {
                 std::cout << '\n' << currentLine << ":" << linecpos+1 << " syntax error: no valid element found\n";
-                peErr(255); return 0;
+                peErr(255); return;
             }
         }
         //read more of current element
@@ -376,7 +377,7 @@ unsigned char splitLine(char* line,unsigned char* elementTypes,char** elementStr
         std::cout << ")";
         if(debug>=200) {std::cout << '\n';}
     }
-    return 0;
+    return;
 }
 
 //returns 0 or jump destination
@@ -481,9 +482,10 @@ unsigned long parseLine(char* line) {
     //allocate memory for element strings
     for(unsigned char i=0;i<6;i++) {elementStrings[i] = new char[32];}
     unsigned char currentElement=0;
-    //return if the line is a comment/whitespace/...
-    if(splitLine(line,elementTypes,elementStrings,currentElement)) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
-    if(peErr()) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
+    bool isEmpty = 0;
+    splitLine(line,elementTypes,elementStrings,currentElement,isEmpty);
+    //return if the line is a comment/whitespace/... or an error occurred
+    if(isEmpty || peErr()) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
     
     unsigned long res = executeLine(elementTypes,elementStrings,currentElement);
     if(peErr()) {for(unsigned char i=0;i<6;i++) {delete[] elementStrings[i];} return 0;}
@@ -497,7 +499,8 @@ int main(int argc,char* args[]) {
     signal(SIGSEGV,catchFault);
     
     if(argc<2) {
-        std::cout << "Extrasklep's language interpreter version 1.0\nusage: " << args[0] << " [script] [debug level]\n";
+        //too lazy to do arg proper arg parsing yet
+        std::cout << "Extrasklep's language interpreter version 1.0\nusage: " << args[0] << " [script] [debug level] [mode]\nmode: 0 = split lines during execution (slow but you might want to use this when debugging)\n      1 = split all lines before execution (fast, default)\n";
         //begin interactive shell
         std::cout << "interactive shell\n";
         char* line;
@@ -515,7 +518,11 @@ int main(int argc,char* args[]) {
         }
     }
     if(argc>2) {
-        debug=atoi(args[2]);
+        debug = atoi(args[2]);
+    }
+    bool splitMode = 1;
+    if(argc>3) {
+        splitMode = atoi(args[3]);
     }
     
     char** lines;
@@ -536,7 +543,7 @@ int main(int argc,char* args[]) {
         }
         if(debug) {std::cout << "total lines: " << totalLines << '\n';}
         
-        //split lines
+        //split file into lines
         lines = new char* [totalLines];
         unsigned long filePos = 0;
         unsigned long previousFilePos = 0;
@@ -554,13 +561,37 @@ int main(int argc,char* args[]) {
         }
         delete[] memblock;
         
+        
+        unsigned char elementTypes[totalLines][6];
+        char* elementStrings[totalLines][6];
+        unsigned char currentElement[totalLines];
+        bool isEmpty[totalLines];
+        if(splitMode) {
+            //split lines into elements
+            for(unsigned long l=1;l<totalLines;l++) {
+                gLine = l;
+                
+                currentElement[l] = 0;
+                isEmpty[l] = 0;
+                for(unsigned char i=0;i<6;i++) {
+                    elementStrings[l][i] = new char[32];
+                    elementTypes[l][i] = 0;
+                }
+                
+                splitLine(lines[l],elementTypes[l],elementStrings[l],currentElement[l],isEmpty[l]);
+                if(peErr()) {exit(255);}
+            }
+        }
+        
         unsigned long currentLine=0;
         while (++currentLine < totalLines) {
             gLine=currentLine;
             
             //parse and execute
             unsigned long jumpTo;
-            if(jumpTo = parseLine(lines[currentLine])) {
+            if(jumpTo = splitMode ?
+                ( !isEmpty[currentLine] ? executeLine(elementTypes[currentLine],elementStrings[currentLine],currentElement[currentLine]) : 0 ) :
+                parseLine(lines[currentLine])) {
                 //-1 because the loop is going to add to it
                 currentLine=jumpTo-1;
             }
