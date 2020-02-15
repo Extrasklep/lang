@@ -1,0 +1,123 @@
+//generate 511x511 bmp file
+19>>v100; //return jump point - code beginning
+0>>v102; //argument (number of zeros)
+l>>v101; //jump point for calling the function
+3>+v101; //add 3 lines to jump point so the calls don't instantly jump to the return point because of the next line
+1>?v100; //jump to the beginning of main code instead of executing the function
+//function code
+//loop
+v102>>v105; //initializer
+l>>v109; //loop beginning
+v105>?13; //;is more than 0 jump to loop stuff
+1>?17; //jump to else
+0>>r; //{loop stuff
+
+1>-v105; //};decrement)
+1>?v109; //back to loop beginning
+//return
+1>?v100;
+
+//main code
+\B>>r; //bmp file magic word
+\M>>r;
+
+//filesize
+57>>r;
+244>>r; //x256
+11>>r; //x65536
+
+//call 0 function with argument 5
+5>>v102; //set argument
+l>>v100; //set return point
+3>+v100; //add 3 lines to return point so the function is not called endlessly
+1>?v101; //execute the function
+
+54>>r; //offset
+
+//write zeros
+3>>v102; //set argument
+l>>v100; //set return point
+3>+v100; //add 3 lines to return point so the function is not called endlessly
+1>?v101; //execute the function
+
+40>>r; //info header size
+
+//write zeros
+3>>v102; //set argument
+l>>v100; //set return point
+3>+v100; //add 3 lines to return point so the function is not called endlessly
+1>?v101; //execute the function
+
+255>>r; //width
+1>>r; //x256
+
+//write zeros
+2>>v102; //set argument
+l>>v100; //set return point
+3>+v100; //add 3 lines to return point so the function is not called endlessly
+1>?v101; //execute the function
+
+255>>r; //height
+1>>r; //x256
+
+//write zeros
+2>>v102; //set argument
+l>>v100; //set return point
+3>+v100; //add 3 lines to return point so the function is not called endlessly
+1>?v101; //execute the function
+
+1>>r;
+0>>r;
+24>>r; //bits per pixel
+
+//write zeros
+5>>v102; //set argument
+l>>v100; //set return point
+3>+v100; //add 3 lines to return point so the function is not called endlessly
+1>?v101; //execute the function
+
+//image size
+3>>r;
+244>>r; //x256
+11>>r; //x65536
+
+//write zeros
+17>>v102; //set argument
+l>>v100; //set return point
+3>+v100; //add 3 lines to return point so the function is not called endlessly
+1>?v101; //execute the function
+
+//generate the image data
+
+0>>c21; //r value
+0>>c22; //g value
+0>>c23; //b value
+
+//yx loop
+
+511>>v5; //y initializer
+l>>v6; //loop begin
+v5>?102; //jump to loop code
+1>?124; //else jump to end
+//loop code
+//x loop
+511>>v7; //x initializer
+l>>v8; //loop begin
+v7>?108; //jump to loop code
+1>?121; //else jump to end
+//x loop code
+//generate colors
+v7>>c21;
+v5>>c22;
+v5>>c23;
+v7>+c23;
+//write bgr values
+c23>>r;
+c22>>r;
+c21>>r;
+//----
+1>-v7;
+1>?v8; //go back to the beginning of x loop
+//end of x loop
+1>-v5;
+1>?v6; //go back to the beginning of y loop

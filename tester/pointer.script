@@ -1,0 +1,9 @@
+4>>c1;
+7>>c2;
+13>>c3;
+3>>v1;
+v1>?7;
+1>?10;
+cv1>>r; //outputs the value of char variable with the number stored in v1
+1>-v1;
+1>?5;
