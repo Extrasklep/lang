@@ -1,5 +1,5 @@
 //Extrasklep's language interpreter made by extrasklep copyright license bla bla
-//version 1.0
+//version 1.1
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <signal.h>
+#include <unistd.h>
+#include <termios.h>
 
 //debug level
 unsigned char debug=0;
@@ -32,6 +34,28 @@ unsigned char cvariables[32768];
 void catchFault(int sig) {
     std::cout << "\nsegmentation fault at line " << gLine << "\n\0";
     exit(255);
+}
+
+//for raw input
+char getch(void) {
+    char buf = 0;
+    struct termios old = {0};
+    fflush(stdout);
+    if(tcgetattr(0, &old) < 0)
+        perror("tcsetattr()");
+    old.c_lflag &= ~ICANON;
+    old.c_lflag &= ~ECHO;
+    old.c_cc[VMIN] = 1;
+    old.c_cc[VTIME] = 0;
+    if(tcsetattr(0, TCSANOW, &old) < 0)
+        perror("tcsetattr ICANON");
+    if(read(0, &buf, 1) < 0)
+        perror("read()");
+    old.c_lflag |= ICANON;
+    old.c_lflag |= ECHO;
+    if(tcsetattr(0, TCSADRAIN, &old) < 0)
+        perror("tcsetattr ~ICANON");
+    return buf;
 }
 
 //checks if character is whitespace
@@ -69,6 +93,11 @@ long getNumberFrom(char* em) {
             std::cout << "\033[30;47m" << "< " << "\033[0m";
             std::cin >> currentNumber;
             return currentNumber;
+        }
+        //raw byte input
+        else if(em[0]=='g') {
+            //get char
+            return getch();
         }
         //current line number
         else if(em[0]=='l') {
@@ -153,7 +182,7 @@ void putNumberTo(char* em, long num) {
             return;
         }
         //input (illegal)
-        else if(em[0]=='i') {
+        else if(em[0]=='i' || em[0]=='g') {
             std::cout << '\n' << gLine << ": illegal operation: cannot write to input\n";
             peErr(255); return;
         }
@@ -241,13 +270,14 @@ bool isType(char character,unsigned char type,bool first) {
         case 9: if(character=='l') {return true;} else {return false;} break;
         case 10: if(character=='\\') {return true;} else if(first==0) {return true;} break;
         case 11: if(character=='n') {return true;} else {return false;} break;
+        case 12: if(character=='g') {return true;} else {return false;} break;
     }
     return false;
 }
 
 //returns true if element type is an input type
 bool isInputType(unsigned char type) {
-    if(type==1||type==3||type==7||type==9||type==10||type==11) {return true;}
+    if(type==1||type==3||type==7||type==9||type==10||type==11||type==12) {return true;}
     return false;
 }
 
@@ -299,8 +329,9 @@ void splitLine(char* line,unsigned char* elementTypes,char** elementStrings,unsi
      * 9 = line number
      * 10 = escape character
      * 11 = newline
+     * 12 = raw input
      */
-    unsigned char types=11; //amount of different types
+    unsigned char types=12; //amount of different types
     //unsigned char elementTypes[6]={0,0,0,0,0,0};
     //char elementStrings[6][32];
     //unsigned char currentElement=0;
@@ -476,6 +507,7 @@ unsigned long parseLine(char* line) {
      * 9 = line number
      * 10 = escape character
      * 11 = newline
+     * 12 = raw input
      */
     unsigned char elementTypes[6]={0,0,0,0,0,0};
     char* elementStrings[6];
@@ -500,7 +532,7 @@ int main(int argc,char* args[]) {
     
     if(argc<2) {
         //too lazy to do arg proper arg parsing yet
-        std::cout << "Extrasklep's language interpreter version 1.0\nusage: " << args[0] << " [script] [debug level] [mode]\nmode: 0 = split lines during execution (slow but you might want to use this when debugging)\n      1 = split all lines before execution (fast, default)\n";
+        std::cout << "Extrasklep's language interpreter version 1.1\nusage: " << args[0] << " [script] [debug level] [mode]\nmode: 0 = split lines during execution (slow but you might want to use this when debugging)\n      1 = split all lines before execution (fast, default)\n";
         //begin interactive shell
         std::cout << "interactive shell\n";
         char* line;

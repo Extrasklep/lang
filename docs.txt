@@ -1,4 +1,4 @@
-Extrasklep's Language version 1.0 documentation 
+Extrasklep's Language version 1.1 documentation
 Sorry if this sucks
 
 Basic syntax:
@@ -64,16 +64,6 @@ Converting char variables to normal variables and the other way should work fine
 
 --I/O--
 
-i (input) -- Read a number from standard input.
-This will always show "< " to notify the user that the program is asking for input.
-Example:
-i>>v0;
-v0>>o;
-Input:
-< 123
-Output:
-> 123
-
 o (output) -- Write a number to standard output.
 This will always show "> " before the number and a newline after the number.
 Example:
@@ -85,6 +75,16 @@ Output:
 1234
 123
 
+i (input) -- Read a number from standard input.
+This will always show "< " to notify the user that the program is asking for input.
+Example:
+i>>v0;
+v0>>o;
+Input:
+< 123
+Output:
+> 123
+
 r (output) -- Raw output: write a byte to standard output.
 Example:
 \A>>c0;
@@ -92,6 +92,14 @@ Example:
 c0>>r;
 c1>>r;
 
+g (input) -- Raw input: Read a byte from standard input (added in v1.1)
+Example:
+g>>c0;
+n>>r;
+c0>>o;
+Output:
+[user inputs 'g']
+> 103
 
 --SIGNS--
 
@@ -178,6 +186,7 @@ Output:
 > 5
 
 --LETTERS--
+
 \ - Letter escape. Returns the number of the letter after it.
 This will not work with new lines and maybe some other characters that aren't normal.
 Example:
@@ -220,6 +229,13 @@ c1>>r;
 c2>>r;
 Output:
 ddd
+
+g - Raw input for characters. This will return a byte from standard input and not put anything before or after it. (added in v1.1)
+g>>c0;
+c0>>o;
+Output:
+[user inputs 'a']
+> 97
 
 l - Current line number. Returns the number of the current line to use for jumping to it later or debugging.
 Example:
