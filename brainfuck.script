@@ -33,127 +33,155 @@ v10>>v8; //store end of program
 v8>>v20; //brainfuck memory pointer
 1>+v20;
 
-0>>v15; //location of previous [
-0>>v16; //jumping right now flag
-
+0>>v15; //jumping left flag
+0>>v16; //jumping right flag
+0>>v17; //nested loop counter
 
 cv10>>c0; //read next byte into memory
 
 
-v16>?45;
-1>?52;
-//check if character matches ] if jumping right now
+v16>?47; //right jump
+v15>?65; //left jump
+1>?81;
+
+//check if character matches [ or ]
 c0>>c1;
 
 v105>-c1;
-c1>?156; //goto end of loop if it doesn't match
-0>>v16; //set jump flag back to 0
+c1>?56; //goto [ check if doesn't match
+1>-v17; //decrease loop cnt
+v17>?62; //goto end
+0>>v16; //destination reached
+1>?70; //jump out
+// [ check
+c0>>c1;
+v104>-c1;
+c1>?62; //goto end
+//incerase loop counter
+1>+v17;
+1>?184; //goto end of loop
 
-
+//left jump
+//check if character matches [ or ]
+c0>>c1;
+v104>-c1;
+c1>?73; //goto ] check if doesn't match
+1>-v17; //decrease loop cnt
+v17>?79; //goto end
+0>>v15; //destination reached
+1>?80; //jump out
+// ] check
+c0>>c1;
+v105>-c1;
+c1>?79; //goto end
+//incerase loop counter
+1>+v17;
+2>-v10; //go back 1 byte in program (end of loop increases it)
+1>?184; //goto end of loop
 
 //check if current character matches '<' and if not try that for all other characters
 c0>>c1;
 
 v100>-c1;
 
-c1>?66; //doesn't match, try next character
+c1>?94; //doesn't match, try next character
 
 //<
 1>-v20;
 //goto end of loop
-1>?156;
+1>?184;
 
 
 c0>>c1;
 
 v101>-c1;
 
-c1>?78; //doesn't match, try next character
+c1>?106; //doesn't match, try next character
 
 //>
 1>+v20;
 //goto end of loop
-1>?156;
+1>?184;
 
 
 c0>>c1;
 
 v102>-c1;
 
-c1>?90; //doesn't match, try next character
+c1>?118; //doesn't match, try next character
 
 //-
 1>-cv20;
 //goto end of loop
-1>?156;
+1>?184;
 
 
 c0>>c1;
 
 v103>-c1;
 
-c1>?102; //doesn't match, try next character
+c1>?130; //doesn't match, try next character
 
 //>+
 1>+cv20;
 //goto end of loop
-1>?156;
+1>?184;
 
 
 c0>>c1;
 
 v104>-c1;
 
-c1>?117; //doesn't match, try next character
+c1>?144; //doesn't match, try next character
 
 //[
-cv20>?113;
+cv20>?141;
 1>>v16; //set jump flag to 1
-1>?114;
-v10>>v15; //set previous [ location to current pc
+
 //goto end of loop
-1>?156;
+1>?184;
 
 
 c0>>c1;
 
 v105>-c1;
 
-c1>?131; //doesn't match, try next character
+c1>?159; //doesn't match, try next character
 
 //]
-cv20>?127;
-1>?128;
-v15>>v10; //go back to previous [
-//goto end of loop
+cv20>?154;
 1>?156;
+1>>v15; //set left jump flag
+
+//goto end of loop
+1>?184;
 
 
 c0>>c1;
 
 v106>-c1;
 
-c1>?143; //doesn't match, try next character
+c1>?171; //doesn't match, try next character
 
 //.
 cv20>>r;
 //goto end of loop
-1>?156;
+1>?184;
 
 
 c0>>c1;
 
 v107>-c1;
 
-c1>?156; //doesn't match, continue loop and try next program byte
+c1>?184; //doesn't match, continue loop and try next program byte
 
 //,
 g>>cv20;
 //goto end of loop
-1>?156;
+1>?184;
 
 
-//END OF LOOP
+// 184 END OF LOOP
 
 
 1>+v10; //increase program counter
@@ -164,4 +192,4 @@ v8>-v0;
 v0>?10000;
 
 //continue loop
-1>?38;
+1>?39;
