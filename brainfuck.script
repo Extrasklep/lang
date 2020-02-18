@@ -46,7 +46,7 @@ v16>?45;
 c0>>c1;
 
 v105>-c1;
-c1>?2356; //goto end of loop if it doesn't match
+c1>?156; //goto end of loop if it doesn't match
 0>>v16; //set jump flag back to 0
 
 
