@@ -48,7 +48,7 @@ int main(int argc, char** args) {
     
     std::cout << "Comments... ";
     char* t1o = system_goutput(join_str_with_space(args[1],"test.script"));
-    if(strlen(t1o) == 0 && t1o[0] == '\0') {
+    if(strlen(t1o) == 1 && t1o[0] == 'a') {
         std::cout << "PASSED\n";
     } else {
         std::cout << "FAILED\n";
@@ -132,6 +132,30 @@ int main(int argc, char** args) {
             std::cout << "FAILED\n";
             passing = false;
         }
+    }
+    
+    std::cout << "Raw input (v1.1)... ";
+    const char* jsres1 = join_str_with_space(args[1],"11.script");
+    char* jsres1c = new char[strlen(jsres1)+1];
+    strcpy(jsres1c,jsres1);
+    char* t8o = system_goutput(join_str_with_space("cat /dev/null |",jsres1c));
+    if(strlen(t8o) == 1 && t8o[0] == 'a') {
+        std::cout << "PASSED\n";
+    } else {
+        std::cout << "FAILED\n";
+        passing = false;
+    }
+    
+    std::cout << "Brainfuck interpreter (v1.1)... ";
+    const char* jsres2 = join_str_with_space(args[1],"../brainfuck.script");
+    char* jsres2c = new char[strlen(jsres2)+1];
+    strcpy(jsres2c,jsres2);
+    char* t9o = system_goutput(join_str_with_space("cat test.bf |",jsres2c));
+    if(strlen(t9o) == 6 && t9o[0] == 'a' && t9o[1] == 'b' && t9o[2] == 'c' && t9o[3] == 'd' && t9o[4] == 'e' && t9o[5] == 'f') {
+        std::cout << "PASSED\n";
+    } else {
+        std::cout << "FAILED\n";
+        passing = false;
     }
     
     system("rm .test.bmp");
