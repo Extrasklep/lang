@@ -1,5 +1,5 @@
-Extrasklep's Language version 1.1 documentation
-Sorry if this sucks
+ic-scm/lang documentation (version 1.1).
+This language is a stupid project that was done in a few days, this documentation is not really great and might have some mistakes, but it should be enough to understand the language.
 
 Basic syntax:
 [input][sign][output];

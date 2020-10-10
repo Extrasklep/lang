@@ -1,5 +1,6 @@
-//Extrasklep's language interpreter made by extrasklep copyright license bla bla
-//version 1.1
+//Interpreter for ic-scm/lang
+//This was a simple project made in a few days, the code quality is not great.
+//Language version 1.1
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -532,7 +533,7 @@ int main(int argc,char* args[]) {
     
     if(argc<2) {
         //too lazy to do arg proper arg parsing yet
-        std::cout << "Extrasklep's language interpreter version 1.1\nusage: " << args[0] << " [script] [debug level] [mode]\nmode: 0 = split lines during execution (slow but you might want to use this when debugging)\n      1 = split all lines before execution (fast, default)\n";
+        std::cout << "lang version 1.1\nusage: " << args[0] << " [script] [debug level] [mode]\nmode: 0 = split lines during execution (slow but you might want to use this when debugging)\n      1 = split all lines before execution (fast, default)\n";
         //begin interactive shell
         std::cout << "interactive shell\n";
         char* line;
